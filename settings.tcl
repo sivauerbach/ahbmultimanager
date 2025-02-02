@@ -5,4 +5,4 @@ set library_file_list [list \
     test_library   [glob -nocomplain ./tb/*.sv]
 ]
 
-set top_module test_library.randtest
+set top_module test_library.testbench
