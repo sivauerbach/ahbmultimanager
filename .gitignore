@@ -1,1 +1,5 @@
+# Ignore Verilators compilation directory
 obj_dir
+
+# Ignore Emacs autosave files
+*~
