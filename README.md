@@ -5,3 +5,5 @@ An implementation of the AHB Multimanager spec using round robin arbitration. Cu
 ```bash
 vsim -do setup.tcl
 ```
+
+I've added Verilator compilation and simulation with a Makefile. Type `make` to compile and simulate.

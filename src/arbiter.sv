@@ -1,8 +1,8 @@
-module arbiter #(parameter CHANNELS = 4) (
-  AHB.subordinate managers[CHANNELS-1:0],
-  AHB.manager mainbus,
-  output logic [CHANNELS-1:0] granted,
-  output logic [CHANNELS-1:0] grantedD
+module arbiter #(parameter MANAGERS = 4) (
+  ahb.subordinate managers[MANAGERS-1:0],
+  ahb.manager mainbus,
+  output logic [MANAGERS-1:0] granted,
+  output logic [MANAGERS-1:0] grantedD
 );
 
   
