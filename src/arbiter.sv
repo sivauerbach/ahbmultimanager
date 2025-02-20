@@ -5,6 +5,10 @@ module arbiter #(parameter MANAGERS = 4) (
   output logic [MANAGERS-1:0] grantedD
 );
 
-  
+   genvar i;
+
+   for (i = 0; i < MANAGERS; i++) begin:saveregs
+         
+   end
   
 endmodule
