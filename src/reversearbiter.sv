@@ -50,3 +50,4 @@ module reversearbiter #(parameter WIDTH = 4)(
   and (Y[WIDTH-1], cascade[WIDTH-1], X[WIDTH-1]);
 
 endmodule // fixed arbiter
+
