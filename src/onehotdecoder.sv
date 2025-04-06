@@ -28,20 +28,29 @@
 //   OR OTHER DEALINGS IN THE SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module priorityencoder #(parameter WIDTH = 4)(
+// onehot = 0001
+// i=0 block::  1<<i = 1 = 0001 == onehot => Y=i=0
+// input 0001 => output Y=0 (manager 0)
+
+
+
+module onehotdecoder #(parameter WIDTH = 4)(
   input logic [WIDTH-1:0] onehot,
-  output logic [$clog2(WIDTH)-1:0] Y
+  output logic [$clog2(WIDTH)-1:0] decodedint
 );
 
 // genvar i;
 always_comb
 begin
-  Y = '0;
+  decodedint = '0;
   for (int i = 0; i < WIDTH; i++) begin : priorityencoder
     if ((1 << i) == onehot) begin
-      Y = i;
+      decodedint = i;
     end  
   end
 end
+
+
+
 
 endmodule // bintoonehot

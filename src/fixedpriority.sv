@@ -28,7 +28,7 @@
 //   OR OTHER DEALINGS IN THE SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module reversearbiter #(parameter WIDTH = 4)(
+module fixedpriority #(parameter WIDTH = 4)(
   input logic [WIDTH-1:0] X,
   output logic [WIDTH-1:0] Y
 );
