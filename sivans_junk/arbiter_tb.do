@@ -10,14 +10,14 @@ vlib work
 vlog arbiter_tb.sv arbiter.sv fixedpriority.sv onehotdecoder.sv rotator.sv 
 
 # start and run simulation
-vsim -voptargs=+acc work.testbench
+vsim -voptargs=+acc work.arbiter_tb
 
 view list
 view wave
 
 -- display input and output signals as hexidecimal values
 # Diplays All Signals recursively
-add wave -hex -r /testbench/*
+add wave -hex -r /arbiter_tb/*
 # add wave -noupdate -divider -height 32 "Datapath"
 # add wave -hex /tb/dut/part1/*
 # add wave -noupdate -divider -height 32 "Control"
@@ -28,7 +28,7 @@ add wave -hex -r /testbench/*
 # add wave -hex /tb/dut/part1/note3/*
 # add wave -hex /tb/dut/part1/note4/*
 
-add list -hex -r /testbench/*
+add list -hex -r /arbiter_tb/*
 add log -r /*
 
 -- Set Wave Output Items 

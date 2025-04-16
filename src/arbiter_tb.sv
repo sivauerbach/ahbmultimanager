@@ -4,7 +4,7 @@
 
 // load with vsim xz.sv
 
-module testbench #(parameter MANAGERS = 4) ();
+module arbiter_tb #(parameter MANAGERS = 4) ();
   logic [MANAGERS-1:0] requestV, grantedV;
   logic       clk;
 
