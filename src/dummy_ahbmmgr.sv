@@ -40,7 +40,8 @@ module dummy_ahbmmgr #(parameter MANAGERS = 4) (
   // on clk: forward signals from granted master to mainbus and
   // forward signals from mainbus to the selected manager. Set HREADY=LOW to all others
   for (genvar index = 0; index < MANAGERS; index++) begin
-    always_ff @(posedge HCLK or negedge HRESETn) begin
+    // always_ff @(posedge HCLK or negedge HRESETn) begin
+    always @(*) begin
       if (!HRESETn) 
         managers[index].HREADY <= 1'b1;
       else begin

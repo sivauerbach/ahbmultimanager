@@ -22,15 +22,26 @@ radix define TRANS_states {
     -default binary
 }
 
+# Enumerating Transmition states
+radix define HSIZE_states {
+    3'b000 "BYTE",
+    3'b001 "HALF",
+    3'b010 "WORD",
+    3'b011 "DW",
+    3'b100 "4WORD",
+    3'b101 "8WORD",
+    -default binary
+}
+
 radix define HBURST_states {
-3'b000 "SINGLE",
-3'b001 "INCR",
-3'b010 "WRAP4",
-3'b011 "INCR4",
-3'b100 "WRAP8",
-3'b101 "INCR8",
-3'b110 "WRAP16",
-3'b111 "INCR16",
+    3'b000 "SINGLE",
+    3'b001 "INCR",
+    3'b010 "WRAP4",
+    3'b011 "INCR4",
+    3'b100 "WRAP8",
+    3'b101 "INCR8",
+    3'b110 "WRAP16",
+    3'b111 "INCR16",
     -default binary
 }
 
@@ -53,13 +64,13 @@ add wave -noupdate /AHB_TB/hready
 add wave -noupdate /AHB_TB/data_out_m0
 add wave -noupdate -expand -group Master_0_outputs /AHB_TB/d0/hsel
 add wave -noupdate -expand -group Master_0_outputs -radix binary /AHB_TB/d0/mo/start_samp
-add wave -noupdate -expand -group Master_0_outputs -radix binary /AHB_TB/d0/mo/state
-add wave -noupdate -expand -group Master_0_outputs -radix binary /AHB_TB/d0/mo/next_state
+add wave -noupdate -expand -group Master_0_outputs -radix TRANS_states /AHB_TB/d0/mo/state
+add wave -noupdate -expand -group Master_0_outputs -radix TRANS_states /AHB_TB/d0/mo/next_state
 
 add wave -noupdate -expand -group Master_0_outputs -radix HBURST_states /AHB_TB/d0/mo/o_hburst
 add wave -noupdate -expand -group Master_0_outputs -radix unsigned -childformat {{{/AHB_TB/d0/mo/o_haddr[31]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[30]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[29]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[28]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[27]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[26]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[25]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[24]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[23]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[22]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[21]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[20]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[19]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[18]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[17]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[16]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[15]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[14]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[13]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[12]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[11]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[10]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[9]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[8]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[7]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[6]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[5]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[4]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[3]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[2]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[1]} -radix unsigned} {{/AHB_TB/d0/mo/o_haddr[0]} -radix unsigned}} -subitemconfig {{/AHB_TB/d0/mo/o_haddr[31]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[30]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[29]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[28]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[27]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[26]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[25]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[24]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[23]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[22]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[21]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[20]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[19]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[18]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[17]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[16]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[15]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[14]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[13]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[12]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[11]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[10]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[9]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[8]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[7]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[6]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[5]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[4]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[3]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[2]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[1]} {-height 15 -radix unsigned} {/AHB_TB/d0/mo/o_haddr[0]} {-height 15 -radix unsigned}} /AHB_TB/d0/mo/o_haddr
 add wave -noupdate -expand -group Master_0_outputs -radix hexadecimal /AHB_TB/d0/mo/o_hwdata
-add wave -noupdate -expand -group Master_0_outputs -radix binary /AHB_TB/d0/mo/o_hsize
+add wave -noupdate -expand -group Master_0_outputs -radix HSIZE_states /AHB_TB/d0/mo/o_hsize
 add wave -noupdate -expand -group Master_0_outputs -radix TRANS_states /AHB_TB/d0/mo/o_htrans
 add wave -noupdate -expand -group Master_0_outputs -radix HWRITE_states /AHB_TB/d0/mo/o_hwrite
 add wave -noupdate /AHB_TB/mem
@@ -83,7 +94,8 @@ radix signal sim:/AHB_TB/d0/mmgr_sub/HBURST HBURST_states
 
 radix signal sim:/AHB_TB/d0/mast_mmgr/HWRITE HWRITE_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HWRITE HWRITE_states
-
+radix signal sim:/AHB_TB/d0/mast_mmgr/HSIZE HSIZE_states
+radix signal sim:/AHB_TB/d0/mmgr_sub/HSIZE HSIZE_states
 
 
 TreeUpdate [SetDefaultTree]
@@ -106,4 +118,4 @@ update
 # WaveRestoreZoom {481262800 ps} {532565200 ps}
 wave zoom full
 -- Run the Simulation
-run 6000 ns
+run 10000 ns
