@@ -13,7 +13,7 @@ module arbiter #(parameter MANAGERS = 4) (
     initial prevgrantID = 0;
     always @ (posedge enable) begin // CHECK, always, always_ff, CHECK: use only enable or on posedge clk { if(en)}
         if (grantedID == MANAGERS-1) prevgrantID <= 0;
-        else if (requestV == 0)
+        else if (requestV == '0)
             prevgrantID <= prevgrantID;
         else 
             prevgrantID <= grantedID + 1; //CHECK: use nonblocking?
