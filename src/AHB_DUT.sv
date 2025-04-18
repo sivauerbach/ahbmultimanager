@@ -1,23 +1,24 @@
 module AHB_DUT(i_hclk,i_hreset,
-               i_start_0,i_hburst,i_haddr_0,i_hwrite_0,i_hsize_0,i_hwdata_0,o_hrdata_m0,
-               o_hready);
+               i_start_0,i_hburst,i_haddr_0,i_hwrite_0,i_hsize_0,i_hwdata_0,o_hrdata_m,
+               o_hready_m);
 
 //Parameters
 parameter ADDR_WIDTH=32;                               //Address bus width
 parameter DATA_WIDTH=32;                               //Data bus width
 parameter MEMORY_DEPTH=512;                            //Slave memory 
 parameter SLAVE_COUNT=1;                               //Number of connected AHB slaves
+parameter MASTER_COUNT=4;                               //Number of connected AHB slaves
 parameter WAIT_WRITE=0;                                //Number of wait cycles issued by the slave in response to a 'write' transfer
 parameter WAIT_READ=0;                                 //Number of wait cycles issued by the slave in response to a 'read' transfer
 
 parameter REGISTER_SELECT_BITS=12;                     //Memory mapping - each slave's internal memory has maximum 2^REGISTER_SELECT_BITS-1 bytes (depends on MEMORY_DEPTH)
 parameter SLAVE_SELECT_BITS=20;                        //Memory mapping - width of slave address
 
-//Inputs 
+//Inputs From Testbench
 input logic i_hclk;                                    //All signal timings are related to the rising edge of hclk
 input logic i_hreset;                                  //Active low bus reset
-
 input logic i_start_0;                                 //Transfer initiation indicator. If i_start is logic high at a riding edge of hclk, a transfer is issued
+
 input logic [2:0] i_hburst;                            //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
 input logic [ADDR_WIDTH-1:0] i_haddr_0;                //Address bus
 input logic i_hwrite_0;                                //Indicates the transfer direction. Logic high values indicates a 'write' and logic low a 'read'
@@ -25,16 +26,19 @@ input logic [2:0] i_hsize_0;                           //Indicates the size of t
 input logic [DATA_WIDTH-1:0] i_hwdata_0;               //Write data bus for 'write' transfers from the master to a slave
 
 //Outpus
-output logic [DATA_WIDTH-1:0] o_hrdata_m0;             //Data read by master 0 after a 'read' transfer
-output logic o_hready;                                 //AHB side ready signal. Declared as output to be used in the various transfer initiation tasks
+output logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] o_hrdata_m;             //Data read by master 0 after a 'read' transfer
+output logic [MASTER_COUNT-1:0] o_hready_m;                                 //AHB side ready signal. Declared as output to be used in the various transfer initiation tasks
 
-//Internal signals
-logic [ADDR_WIDTH-1:0] hadder_m0;                       //Master 0
-logic hwrite_m0;                                        //Indicates the transfer direction issued by Master 0
-logic [2:0] hsize_m0;                                   //Indicates the size of the transfer issued by Master 0
-logic [1:0] htrans_m0;                                  //Indicates the transfer type, i.e. IDLE, BUSY, NONSEQUENTIAL, SEQUENTIAL for Master 0
-logic [DATA_WIDTH-1:0] hwdata_m0;                       //Write data bus of Master 0
-logic [2:0] o_hburst_m0;                            //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
+// MASTER SIGNALS
+logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0] hadder_m;                       //Master 0
+logic [MASTER_COUNT-1:0]hwrite_m;                                        //Indicates the transfer direction issued by Master 0
+logic [MASTER_COUNT-1:0][2:0] hsize_m;                                   //Indicates the size of the transfer issued by Master 0
+logic [MASTER_COUNT-1:0][1:0] htrans_m;                                  //Indicates the transfer type, i.e. IDLE, BUSY, NONSEQUENTIAL, SEQUENTIAL for Master 0
+logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] hwdata_m;                       //Write data bus of Master 0
+logic [MASTER_COUNT-1:0][2:0] o_hburst_m;                                //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
+
+logic [MASTER_COUNT-1:0] hresp_m;                                           //Transfer response, selected by the decoder
+logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] hrdata_m;                         //Read data bus, selected by the decoder
 
 
 // SLAVE 0
@@ -56,30 +60,34 @@ logic [DATA_WIDTH-1:0] hwdata_s0;                       //Write data bus of Mast
 // logic hresp_2;                                         //Slave 2 response signal
 // logic [DATA_WIDTH-1:0] hrdata_2;                       //Read data bus of Slave 2
 
-logic hresp;                                           //Transfer response, selected by the decoder
-logic [DATA_WIDTH-1:0] hrdata;                         //Read data bus, selected by the decoder
+
 logic [SLAVE_COUNT-1:0] hsel = 1'b1;                          //Slave select bus 
 
 //HDL code
 //ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) ahb_if (i_hclk, i_hreset);
-ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mast_mmgr (i_hclk, i_hreset);
+ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mast_mmgr [MASTER_COUNT-1:0] (i_hclk, i_hreset);
 ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mmgr_sub (i_hclk, i_hreset);
 
-// *** Port assignments for Manager <-> AHBmmgr cable
-// into manager
-assign o_hready = mast_mmgr.HREADY;
-assign hresp = mast_mmgr.HRESP;
-assign hrdata = mast_mmgr.HRDATA;
 
-// out of manager
-assign mast_mmgr.HADDR = hadder_m0;
-assign mast_mmgr.HWDATA = hwdata_m0;
-assign mast_mmgr.HWRITE = hwrite_m0;
-assign mast_mmgr.HSIZE = hsize_m0;
-assign mast_mmgr.HTRANS = htrans_m0;
-assign mast_mmgr.HBURST = o_hburst_m0;
-// assign mast_mmgr.HPROT = ;
-// assign mast_mmgr.HMASTLOCK = ;
+// *** Port assignments for Managers <-> AHBmmgr cables
+for (genvar i = 0; i < MASTER_COUNT; i++) begin
+
+  // into manager
+  assign o_hready_m[i] = mast_mmgr[i].HREADY;
+  assign hresp_m[i] = mast_mmgr[i].HRESP;
+  assign hrdata_m[i] = mast_mmgr[i].HRDATA;
+
+  // out of manager
+  assign mast_mmgr[i].HADDR = hadder_m[i];
+  assign mast_mmgr[i].HWDATA = hwdata_m[i];
+  assign mast_mmgr[i].HWRITE = hwrite_m[i];
+  assign mast_mmgr[i].HSIZE = hsize_m[i];
+  assign mast_mmgr[i].HTRANS = htrans_m[i];
+  assign mast_mmgr[i].HBURST = o_hburst_m[i];
+  // assign mast_mmgr[i].HPROT = ;
+  // assign mast_mmgr[i].HMASTLOCK = ;
+
+end
 
 
 // *** Port assignments for AHBmmgr <-> Uncore Subordinate cable
@@ -98,36 +106,33 @@ assign htrans_s0 = mmgr_sub.HTRANS;
 // assign mmgr_sub.HPROT = ;
 // assign mmgr_sub.HMASTLOCK = ;
 
-// For one slave: Feed subordinate HREADY back to subordinate as i_hreadyin
 
-
-
-
-dummy_ahbmmgr #(.MANAGERS(1)) my_mmgr ( .HCLK(i_hclk), .HRESETn(i_hreset), .managers({mast_mmgr}), .mainbus(mmgr_sub));
+dummy_ahbmmgr #(.MANAGERS(1)) my_mmgr ( .HCLK(i_hclk), .HRESETn(i_hreset), .managers(mast_mmgr), .mainbus(mmgr_sub));
 
 
 //AHB master instantiation
-AHB_manager #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mo(.i_hclk(i_hclk),
-                                                                  .i_hreset(i_hreset),
-                                                                  .i_start(i_start_0),
-                                                                  .i_haddr(i_haddr_0),
-                                                                  .i_hwrite(i_hwrite_0),
-                                                                  .i_hsize(i_hsize_0),
-                                                                  .i_hwdata(i_hwdata_0),
-                                                                  .i_hready(o_hready),
-                                                                  .i_hresp(hresp),
-                                                                  .i_hrdata(hrdata),
-                                                                  .i_hburst(i_hburst),
+for (genvar i = 0; i < MASTER_COUNT; i++) begin
+  AHB_manager #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mo(.i_hclk(i_hclk),
+                                                                    .i_hreset(i_hreset),
+                                                                    .i_start(i_start_0),
+                                                                    .i_haddr(i_haddr_0),
+                                                                    .i_hwrite(i_hwrite_0),
+                                                                    .i_hsize(i_hsize_0),
+                                                                    .i_hwdata(i_hwdata_0),
+                                                                    .i_hready(o_hready_m[i]),
+                                                                    .i_hresp(hresp_m[i]),
+                                                                    .i_hrdata(hrdata_m[i]),
+                                                                    .i_hburst(i_hburst),
 
-                                                                  .o_haddr(hadder_m0),
-                                                                  .o_hwrite(hwrite_m0),
-                                                                  .o_hsize(hsize_m0),
-                                                                  .o_htrans(htrans_m0),
-                                                                  .o_hwdata(hwdata_m0),
-                                                                  .o_hrdata(o_hrdata_m0),
-                                                                  .o_hburst(o_hburst_m0)
-);
-
+                                                                    .o_haddr(hadder_m[i]),
+                                                                    .o_hwrite(hwrite_m[i]),
+                                                                    .o_hsize(hsize_m[i]),
+                                                                    .o_htrans(htrans_m[i]),
+                                                                    .o_hwdata(hwdata_m[i]),
+                                                                    .o_hrdata(o_hrdata_m[i]),
+                                                                    .o_hburst(o_hburst_m[i])
+  );
+end
 
 //AHB slave instantiation
 AHB_subordinate #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY_DEPTH), .WAIT_WRITE(WAIT_WRITE), .WAIT_READ(WAIT_READ)) so(
@@ -138,7 +143,7 @@ AHB_subordinate #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPT
                     .i_hwrite(hwrite_s0),
                     .i_hsize(hsize_s0),
                     .i_htrans(htrans_s0),
-                    .i_hreadyin(hreadyout_s0), // For one slave: Feed s0 HREADY back to s0 as i_hreadyin
+                    .i_hreadyin(hreadyout_s0), // For one slave: Feed s0 hreadyout back to s0 as i_hreadyin
                     .i_hwdata(hwdata_s0),
 
                     .o_hreadyout(hreadyout_s0),

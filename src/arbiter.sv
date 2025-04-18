@@ -5,29 +5,29 @@ module arbiter #(parameter MANAGERS = 4) (
     //output logic [MANAGERS-1:0] grantedID // integer representing the granted manager's ID (between [0, MANAGERS-1])
 );
     logic [$clog2(MANAGERS)-1:0] grantedID;      // integer representing the granted manager's ID (between [0, MANAGERS-1])
-    logic [$clog2(MANAGERS)-1:0] prevgrantID;  // integer representing the previous ID granted (between [0, MANAGERS-1])
-    logic [MANAGERS-1:0] rotatedLeft;
-    logic [MANAGERS-1:0] priority_vector;
+    logic [$clog2(MANAGERS)-1:0] nextgrantID;  // integer representing the previous ID granted (between [0, MANAGERS-1])
     logic [MANAGERS-1:0] rotatedRight;
+    logic [MANAGERS-1:0] priority_vector;
+    logic [MANAGERS-1:0] rotatedLeft;
 
-    initial prevgrantID = 0;
+    initial nextgrantID = 0;
     always @ (posedge enable) begin // CHECK, always, always_ff, CHECK: use only enable or on posedge clk { if(en)}
-        if (grantedID == MANAGERS-1) prevgrantID <= 0;
+        if (grantedID == MANAGERS-1) nextgrantID <= 0;
         else if (requestV == '0)
-            prevgrantID <= prevgrantID;
+            nextgrantID <= nextgrantID;
         else 
-            prevgrantID <= grantedID + 1; //CHECK: use nonblocking?
+            nextgrantID <= grantedID + 1; //CHECK: use nonblocking?
         
-        grantedV <= rotatedRight;
+        grantedV <= rotatedLeft;
     end
 
-    rotator  #(MANAGERS) rRight(.X(requestV), .Right(1'b1), .Amt(prevgrantID), .Y(rotatedLeft));
+    rotator  #(MANAGERS) rRight(.X(requestV), .RightFlag(1'b1), .Amt(nextgrantID), .Y(rotatedRight));
 
-    fixedpriority #(MANAGERS) findPriority (.X(rotatedLeft), .Y(priority_vector));
+    fixedpriority #(MANAGERS) findPriority (.X(rotatedRight), .Y(priority_vector));
 
-    rotator #(MANAGERS) rLeft (.X(priority_vector), .Right(1'b0), .Amt(prevgrantID), .Y(rotatedRight));
+    rotator #(MANAGERS) rLeft (.X(priority_vector), .RightFlag(1'b0), .Amt(nextgrantID), .Y(rotatedLeft));
     
-    onehotdecoder #(MANAGERS) encode (.onehot(rotatedRight), .decodedint(grantedID));
+    onehotdecoder #(MANAGERS) encode (.onehot(rotatedLeft), .decodedint(grantedID));
 
     
 

@@ -17,16 +17,7 @@ view wave
 
 -- display input and output signals as hexidecimal values
 # Diplays All Signals recursively
-add wave -hex -r /arbiter_tb/*
-# add wave -noupdate -divider -height 32 "Datapath"
-# add wave -hex /tb/dut/part1/*
-# add wave -noupdate -divider -height 32 "Control"
-# add wave -hex /tb/dut/part2/*
-# add wave -noupdate -divider -height 32 "Note for Speaker"
-# add wave -hex /tb/dut/part1/note1/*
-# add wave -hex /tb/dut/part1/note2/*
-# add wave -hex /tb/dut/part1/note3/*
-# add wave -hex /tb/dut/part1/note4/*
+add wave -binary /arbiter_tb/dut/*
 
 add list -hex -r /arbiter_tb/*
 add log -r /*

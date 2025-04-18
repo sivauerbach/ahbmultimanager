@@ -1,14 +1,14 @@
 ///////////////////////////////////////////
 // rotator.sv
 //
-// Written: sivanauerbach@gmail.com 18 April 2025
+// Written: jacobpease@protonmail.com 18 March 2022
 // Modified: 
 //
 // Purpose: Rotating bit shifter. Can be any width.
 // 
 // A component of the Wally configurable RISC-V project.
 // 
-// Copyright (C) 2025 Harvey Mudd College & Oklahoma State University
+// Copyright (C) 2021 Harvey Mudd College & Oklahoma State University
 //
 // MIT LICENSE
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this 
@@ -30,23 +30,41 @@
 
 module rotator #(parameter WIDTH = 4) (
   input logic [WIDTH-1:0] X,
-  input logic RightFlag,
+  input logic Right,
   input logic [$clog2(WIDTH)-1:0] Amt,
+
   output logic [WIDTH-1:0] Y
 );
-  always_comb begin
-    if (Amt == 0) Y = X;
-    else begin
-      case (RightFlag)
-        1'b1:  Y = (X << (WIDTH - Amt)) | (X >> Amt) ; // rotate right
-        1'b0:  Y = (X << Amt) | (X >> (WIDTH - Amt)) ; // rotate left
-      endcase
-    end
+
+  logic [WIDTH+2**($clog2(WIDTH))-2:0] z, zshift;
+  logic [$clog2(WIDTH)-1:0] offset;
+
+  // Extend input for rotation.
+  // Left shifting and right shifting are unique.
+  // Input is extended by maximum right shift.
+  if (2**($clog2(WIDTH)) - 1 - WIDTH > 0) begin
+    always_comb
+      begin 
+        if (Right)   z = {X[2*WIDTH-2**($clog2(WIDTH))-1:0],X, X};
+        else         z = {X, X, X[WIDTH-1:2*WIDTH-2**($clog2(WIDTH))+1]};
+      end
+  end else if (2**($clog2(WIDTH)) - 1 - WIDTH == 0) begin // WIDTH ~ 2^N - 1
+    always_comb
+      begin 
+        if (Right)   z = {X, X};
+        else         z = {X, X};
+      end
+  end else begin // WIDTH ~ 2^N
+    always_comb
+      begin 
+        if (Right)   z = {X[WIDTH-2:0], X};
+        else         z = {X, X[WIDTH-1:1]};
+      end
   end
+
+  assign offset = Right ? Amt : ~Amt;
+
+  assign zshift = z >> offset;
+  assign Y = zshift[WIDTH-1:0];
+
 endmodule // rotator
-
-
-//Example: Left rotate by 2:
-// abcd_efgh ---<<2---------- cdef_gh00
-// abcd_efgh --->>6 =(8-2)--- 0000_00ab
-// OR ------------------------cdef_ghab -> rotated left by 2

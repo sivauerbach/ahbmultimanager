@@ -11,6 +11,7 @@ parameter DATA_WIDTH=32;                                         //Data bus widt
 // TODO: parameter MEMORY_DEPTH=1024;                                     //Slave memory 
 parameter MEMORY_DEPTH=80;                                     //Slave memory 
 parameter SLAVE_COUNT=1;                                         //Number of connected AHB slaves
+parameter MASTER_COUNT=1;                                         //Number of connected AHB slaves
 
 parameter WAIT_WRITE=1;                                          //Number of wait cycles issued by the slave in response to a 'write' transfer
 parameter WAIT_READ=2;                                           //Number of wait cycles issued by the slave in response to a 'read' transfer
@@ -311,7 +312,7 @@ endtask
 
 
 //DUT instantiation
-AHB_DUT #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY_DEPTH), .SLAVE_COUNT(SLAVE_COUNT), .WAIT_WRITE(WAIT_WRITE), .WAIT_READ(WAIT_READ)) d0(.i_hclk(clk),
+AHB_DUT #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY_DEPTH), .SLAVE_COUNT(SLAVE_COUNT), .MASTER_COUNT(MASTER_COUNT), .WAIT_WRITE(WAIT_WRITE), .WAIT_READ(WAIT_READ)) d0(.i_hclk(clk),
                                                                                                                                                                        .i_hreset(rstn),
                                                                                                                                                                        .i_start_0(start_0),
                                                                                                                                                                        .i_hburst(hburst_0),
@@ -319,8 +320,8 @@ AHB_DUT #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY
                                                                                                                                                                        .i_hwrite_0(rw_0),
                                                                                                                                                                        .i_hsize_0(hsize_0),
                                                                                                                                                                        .i_hwdata_0(data_rand_0),
-                                                                                                                                                                       .o_hrdata_m0(data_out_m0),
-                                                                                                                                                                       .o_hready(hready)
+                                                                                                                                                                       .o_hrdata_m(data_out_m0),
+                                                                                                                                                                       .o_hready_m(hready)
 );
 
 //Initial blocks

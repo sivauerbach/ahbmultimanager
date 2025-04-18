@@ -57,11 +57,11 @@ onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /AHB_TB/clk
 add wave -noupdate /AHB_TB/rstn
-add wave -noupdate /AHB_TB/start_0
 
-add wave -noupdate -radix unsigned /AHB_TB/addr_rand_0
-add wave -noupdate /AHB_TB/hready
-add wave -noupdate /AHB_TB/data_out_m0
+add wave -noupdate -group Random TB /AHB_TB/start_0
+add wave -noupdate -group Random TB -radix unsigned /AHB_TB/addr_rand_0
+add wave -noupdate -group Random TB /AHB_TB/hready
+add wave -noupdate -group Random TB /AHB_TB/data_out_m0
 add wave -noupdate -group Master_0_outputs /AHB_TB/d0/hsel
 add wave -noupdate -group Master_0_outputs -radix binary /AHB_TB/d0/mo/start_samp
 add wave -noupdate -group Master_0_outputs -radix TRANS_states /AHB_TB/d0/mo/state
@@ -73,18 +73,21 @@ add wave -noupdate -group Master_0_outputs -radix hexadecimal /AHB_TB/d0/mo/o_hw
 add wave -noupdate -group Master_0_outputs -radix HSIZE_states /AHB_TB/d0/mo/o_hsize
 add wave -noupdate -group Master_0_outputs -radix TRANS_states /AHB_TB/d0/mo/o_htrans
 add wave -noupdate -group Master_0_outputs -radix HWRITE_states /AHB_TB/d0/mo/o_hwrite
-add wave -noupdate /AHB_TB/mem
-# add wave -noupdate -group debug /AHB_TB/d0/so/i_hsel
-# add wave -noupdate -group debug /AHB_TB/d0/so/hsel_samp
-# add wave -noupdate -group debug /AHB_TB/d0/so/o_hreadyout
+add wave -noupdate -group Master_0_outputs /AHB_TB/d0/mo/i_start
 
-# Sivan
 add wave -noupdate -group Manager_Cable /AHB_TB/d0/mast_mmgr/*
 add wave -noupdate -group Subordinate_Cable /AHB_TB/d0/mmgr_sub/*
 add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/*
+add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/state
+add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/next_state
+
+add wave -noupdate -group Arbiter /AHB_TB/d0/my_mmgr/arb/*
+
+
 add wave -noupdate -group Subordinate_signals /AHB_TB/d0/so/*
-add wave -noupdate -group Master_0_outputs /AHB_TB/d0/mo/i_start
-delete wave /*/*/*/HPROT
+add wave -noupdate /AHB_TB/mem
+
+### Modifying Radices: 
 
 radix signal sim:/AHB_TB/d0/mast_mmgr/HTRANS TRANS_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HTRANS TRANS_states
@@ -116,6 +119,7 @@ configure wave -timeline 0
 configure wave -timelineunits ns
 update
 # WaveRestoreZoom {481262800 ps} {532565200 ps}
-wave zoom full
+
 -- Run the Simulation
-run 20000 ns
+run 3000 ns
+wave zoom full
