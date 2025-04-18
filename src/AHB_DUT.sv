@@ -1,5 +1,5 @@
 module AHB_DUT(i_hclk,i_hreset,
-               i_start_0,i_hburst,i_haddr_0,i_hwrite_0,i_hsize_0,i_hwdata_0,o_hrdata_m,
+               i_start_0,i_hburst_tb,i_haddr_tb,i_hwrite_tb,i_hsize_tb,i_hwdata_tb,o_hrdata_m,
                o_hready_m);
 
 //Parameters
@@ -19,11 +19,11 @@ input logic i_hclk;                                    //All signal timings are 
 input logic i_hreset;                                  //Active low bus reset
 input logic i_start_0;                                 //Transfer initiation indicator. If i_start is logic high at a riding edge of hclk, a transfer is issued
 
-input logic [2:0] i_hburst;                            //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
-input logic [ADDR_WIDTH-1:0] i_haddr_0;                //Address bus
-input logic i_hwrite_0;                                //Indicates the transfer direction. Logic high values indicates a 'write' and logic low a 'read'
-input logic [2:0] i_hsize_0;                           //Indicates the size of the transfer, i.e. byte, half word or word 
-input logic [DATA_WIDTH-1:0] i_hwdata_0;               //Write data bus for 'write' transfers from the master to a slave
+input logic [MASTER_COUNT-1:0][2:0]             i_hburst_tb;                            //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
+input logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0]  i_haddr_tb;                //Address bus
+input logic [MASTER_COUNT-1:0]                  i_hwrite_tb;                                //Indicates the transfer direction. Logic high values indicates a 'write' and logic low a 'read'
+input logic [MASTER_COUNT-1:0][2:0]             i_hsize_tb;                           //Indicates the size of the transfer, i.e. byte, half word or word 
+input logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0]  i_hwdata_tb;               //Write data bus for 'write' transfers from the master to a slave
 
 //Outpus
 output logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] o_hrdata_m;             //Data read by master 0 after a 'read' transfer
@@ -115,14 +115,14 @@ for (genvar i = 0; i < MASTER_COUNT; i++) begin
   AHB_manager #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mo(.i_hclk(i_hclk),
                                                                     .i_hreset(i_hreset),
                                                                     .i_start(i_start_0),
-                                                                    .i_haddr(i_haddr_0),
-                                                                    .i_hwrite(i_hwrite_0),
-                                                                    .i_hsize(i_hsize_0),
-                                                                    .i_hwdata(i_hwdata_0),
+                                                                    .i_haddr(i_haddr_tb),
+                                                                    .i_hwrite(i_hwrite_tb),
+                                                                    .i_hsize(i_hsize_tb),
+                                                                    .i_hwdata(i_hwdata_tb),
                                                                     .i_hready(o_hready_m[i]),
                                                                     .i_hresp(hresp_m[i]),
                                                                     .i_hrdata(hrdata_m[i]),
-                                                                    .i_hburst(i_hburst),
+                                                                    .i_hburst(i_hburst_tb),
 
                                                                     .o_haddr(hadder_m[i]),
                                                                     .o_hwrite(hwrite_m[i]),

@@ -58,10 +58,10 @@ quietly WaveActivateNextPane {} 0
 add wave -noupdate /AHB_TB/clk
 add wave -noupdate /AHB_TB/rstn
 
-add wave -noupdate -group Random TB /AHB_TB/start_0
-add wave -noupdate -group Random TB -radix unsigned /AHB_TB/addr_rand_0
-add wave -noupdate -group Random TB /AHB_TB/hready
-add wave -noupdate -group Random TB /AHB_TB/data_out_m0
+add wave -noupdate -group Random_TB /AHB_TB/start_0
+add wave -noupdate -group Random_TB -radix unsigned /AHB_TB/addr_rand_0
+add wave -noupdate -group Random_TB /AHB_TB/hready
+add wave -noupdate -group Random_TB /AHB_TB/data_out_m0
 add wave -noupdate -group Master_0_outputs /AHB_TB/d0/hsel
 add wave -noupdate -group Master_0_outputs -radix binary /AHB_TB/d0/mo/start_samp
 add wave -noupdate -group Master_0_outputs -radix TRANS_states /AHB_TB/d0/mo/state
