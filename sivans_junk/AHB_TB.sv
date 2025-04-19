@@ -1,11 +1,10 @@
 `timescale 1ns/100ps
 //AHB-lite TB. Please see documentation for further details and examplary results. 
 
-module AHB_TB();
+module _defunc_AHB_TB();
 
 //Parameter declarations
 parameter CLK_PERIOD=20;                                         //Clock period
-
 parameter ADDR_WIDTH=32;                                         //Address bus width
 parameter DATA_WIDTH=32;                                         //Data bus width
 // TODO: parameter MEMORY_DEPTH=1024;                                     //Slave memory 
@@ -37,17 +36,17 @@ logic rstn;                                                      //Active high l
 integer SEED=15;                                                  //Used for randomization
 
 logic start_0;                                                   //Read/Write transer is initiated if the 'start' signal is logic high upon positive edge of clk
-logic rw_0;                                                      //Dictates transfer direction. '1' for Master-->Slave (write) and '0' for Slave-->Master (read)
-logic [2:0] hsize_0;                                             //transfer size for Master_0
-logic [DATA_WIDTH-1:0] data_rand_0;                              //Randomized data to be written by a Master_0 to a Slave
+logic [MASTER_COUNT-1:0]                  rw_0;                                                      //Dictates transfer direction. '1' for Master-->Slave (write) and '0' for Slave-->Master (read)
+logic [MASTER_COUNT-1:0][2:0]             hsize_0;                                             //transfer size for Master_0
+logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0]  data_rand_0;                              //Randomized data to be written by a Master_0 to a Slave
 
-logic [ADDR_WIDTH-1:0] addr_tmp_0;                               //Randomized register address prior to byte/half word/ word alighment
-logic [ADDR_WIDTH-1:0] addr_rand_1;                              //Randomizes slave address
-logic [ADDR_WIDTH-1:0] addr_rand_0;                              //Address for the transfer issued by Master_0
+logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0]  addr_tmp_0;                               //Randomized register address prior to byte/half word/ word alighment
+logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0]  addr_rand_1;                              //Randomizes slave address
+logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0]  addr_rand_0;                              //Address for the transfer issued by Master_0
 
-logic [2:0] hburst_0;                                            //Burst type
+logic [MASTER_COUNT-1:0][2:0] hburst_0;                                            //Burst type
 
-logic [DATA_WIDTH-1:0] data_out_m0;                              //Received data from one of the slaves as sampled by master #0 following a valid read command
+logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] data_out_m;                              //Received data from one of the slaves as sampled by master #0 following a valid read command
 
 logic hready;                                                    //hready signal indicates if the bus is busy
 
@@ -59,7 +58,21 @@ logic [3:0] beat_counter;                                        //Indicates the
 logic [2:0] addr_delta;                                          //Indicates the width of the transfer: byte=1, half word=2, word=4. 
 logic [4:0] burst_len;                                           //Indicates the burst length: 1,4,8 or 16. 
 logic [ADDR_WIDTH-1:0] addr_mimc;                                //addr_mimc mimics the internal logic within the master which calculates the address
-logic [ADDR_WIDTH-1:0]haddr_rand;                                //
+logic [ADDR_WIDTH-1:0] haddr_rand;                                //
+
+
+/*
+.i_hreset(rstn),
+        .i_start_0(start_0),
+        .i_hburst_tb(hburst_0),
+        .i_haddr_tb(haddr_rand),
+        .i_hwrite_tb(rw_0),
+        .i_hsize_tb(hsize_0),
+        .i_hwdata_tb(data_rand_0),
+        .o_hrdata_m(data_out_m),
+        .o_hready_m(hready)
+*/
+
 
 //Task declerations 
 
@@ -124,30 +137,30 @@ task automatic compare_task(input logic [2:0] hsize, input logic [SLAVE_COUNT-1:
  
   case (hsize_s)                                                 //Compare the value with the relevant mimic memory
     BYTE: 
-    if (mem[slave_idx_s][addr_rand_s]==data_out_m0[31:24])
-      $display("Data stored in mimic memory number %d in address %d is: %h, Data read from slave %d is: %2h - GREAT SUCCESS",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s],slave_idx_s, data_out_m0[31:24]);
+    if (mem[slave_idx_s][addr_rand_s]==data_out_m[31:24])
+      $display("Data stored in mimic memory number %d in address %d is: %h, Data read from slave %d is: %2h - GREAT SUCCESS",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s],slave_idx_s, data_out_m[31:24]);
     else begin
-      $display ("Data stored in mimic memory number %d in address %d is: %h, Data read from slave %d is: %2h - FAILURE",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s],slave_idx_s, data_out_m0[31:24]);
+      $display ("Data stored in mimic memory number %d in address %d is: %h, Data read from slave %d is: %2h - FAILURE",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s],slave_idx_s, data_out_m[31:24]);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime); 
       //$finish;
   end 
 	
     HALFWORD :
-    if ({mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1]}==data_out_m0[31:16])
-      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from slave %d is: %4h - GREAT SUCCESS",slave_idx_s, addr_rand_s, {mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1]},slave_idx_s, data_out_m0[31:16]);
+    if ({mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1]}==data_out_m[31:16])
+      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from slave %d is: %4h - GREAT SUCCESS",slave_idx_s, addr_rand_s, {mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1]},slave_idx_s, data_out_m[31:16]);
     else begin
-      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from slave %d is: %4h - FAILURE",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s+:1],slave_idx_s, data_out_m0[31:16]);
+      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from slave %d is: %4h - FAILURE",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s+:1],slave_idx_s, data_out_m[31:16]);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime);
       //$finish;
     end 
 
     WORD :
-    if ({mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]}==data_out_m0[31:0])
-      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from slave %d is: %8h - GREAT SUCCESS", slave_idx_s, addr_rand_s,{mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]},slave_idx_s,data_out_m0);
+    if ({mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]}==data_out_m[31:0])
+      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from slave %d is: %8h - GREAT SUCCESS", slave_idx_s, addr_rand_s,{mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]},slave_idx_s,data_out_m);
     else begin
-      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from slave %d is: %8h - FAILURE",slave_idx_s, addr_rand_s, {mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]}, slave_idx_s,data_out_m0);
+      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from slave %d is: %8h - FAILURE",slave_idx_s, addr_rand_s, {mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]}, slave_idx_s,data_out_m);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime);
       $finish;
@@ -225,8 +238,9 @@ task initiate_transfer(input int m);
   endcase
  
   // addr_rand_1= $dist_uniform(SEED,0,SLAVE_COUNT-1);                   //Selecting a slave to initiate a trasfer with   
+  // haddr_rand = {addr_rand_1[SLAVE_SELECT_BITS-1:0],addr_rand_0[REGISTER_SELECT_BITS-1:0]};
+
   addr_rand_1= 0;                   //Selecting a slave to initiate a trasfer with   
-  
   haddr_rand = {addr_rand_1[SLAVE_SELECT_BITS-1:0],addr_rand_0[REGISTER_SELECT_BITS-1:0]};
   addr_mimc = addr_rand_0;
   end 
@@ -320,7 +334,7 @@ AHB_DUT #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY
                                                                                                                                                                        .i_hwrite_tb(rw_0),
                                                                                                                                                                        .i_hsize_tb(hsize_0),
                                                                                                                                                                        .i_hwdata_tb(data_rand_0),
-                                                                                                                                                                       .o_hrdata_m(data_out_m0),
+                                                                                                                                                                       .o_hrdata_m(data_out_m),
                                                                                                                                                                        .o_hready_m(hready)
 );
 
