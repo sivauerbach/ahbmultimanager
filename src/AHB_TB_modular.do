@@ -117,5 +117,5 @@ update
 
 -- Run the Simulation
 #run 10000 ns
-run -all
+run 50 ms
 wave zoom full
