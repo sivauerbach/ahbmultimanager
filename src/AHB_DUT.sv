@@ -6,8 +6,8 @@ module AHB_DUT(i_hclk,i_hreset,
 parameter ADDR_WIDTH=32;                               //Address bus width
 parameter DATA_WIDTH=32;                               //Data bus width
 parameter MEMORY_DEPTH=512;                            //Slave memory 
-parameter SLAVE_COUNT=1;                               //Number of connected AHB slaves
-parameter MASTER_COUNT=4;                               //Number of connected AHB slaves
+parameter SUBORDINATE_COUNT=1;                               //Number of connected AHB slaves
+parameter MANAGER_COUNT=4;                               //Number of connected AHB slaves
 parameter WAIT_WRITE=0;                                //Number of wait cycles issued by the slave in response to a 'write' transfer
 parameter WAIT_READ=0;                                 //Number of wait cycles issued by the slave in response to a 'read' transfer
 
@@ -19,26 +19,26 @@ input logic i_hclk;                                    //All signal timings are 
 input logic i_hreset;                                  //Active low bus reset
 input logic i_start_0;                                 //Transfer initiation indicator. If i_start is logic high at a riding edge of hclk, a transfer is issued
 
-input logic [MASTER_COUNT-1:0][2:0]             i_hburst_tb;                            //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
-input logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0]  i_haddr_tb;                //Address bus
-input logic [MASTER_COUNT-1:0]                  i_hwrite_tb;                                //Indicates the transfer direction. Logic high values indicates a 'write' and logic low a 'read'
-input logic [MASTER_COUNT-1:0][2:0]             i_hsize_tb;                           //Indicates the size of the transfer, i.e. byte, half word or word 
-input logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0]  i_hwdata_tb;               //Write data bus for 'write' transfers from the master to a slave
+input logic [MANAGER_COUNT-1:0][2:0]             i_hburst_tb;                            //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
+input logic [MANAGER_COUNT-1:0][ADDR_WIDTH-1:0]  i_haddr_tb;                //Address bus
+input logic [MANAGER_COUNT-1:0]                  i_hwrite_tb;                                //Indicates the transfer direction. Logic high values indicates a 'write' and logic low a 'read'
+input logic [MANAGER_COUNT-1:0][2:0]             i_hsize_tb;                           //Indicates the size of the transfer, i.e. byte, half word or word 
+input logic [MANAGER_COUNT-1:0][DATA_WIDTH-1:0]  i_hwdata_tb;               //Write data bus for 'write' transfers from the master to a slave
 
 //Outpus
-output logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] o_hrdata_m;             //Data read by master 0 after a 'read' transfer
-output logic [MASTER_COUNT-1:0] o_hready_m;                                 //AHB side ready signal. Declared as output to be used in the various transfer initiation tasks
+output logic [MANAGER_COUNT-1:0][DATA_WIDTH-1:0] o_hrdata_m;             //Data read by master 0 after a 'read' transfer
+output logic [MANAGER_COUNT-1:0] o_hready_m;                                 //AHB side ready signal. Declared as output to be used in the various transfer initiation tasks
 
 // MASTER SIGNALS
-logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0] hadder_m;                       //Master 0
-logic [MASTER_COUNT-1:0]hwrite_m;                                        //Indicates the transfer direction issued by Master 0
-logic [MASTER_COUNT-1:0][2:0] hsize_m;                                   //Indicates the size of the transfer issued by Master 0
-logic [MASTER_COUNT-1:0][1:0] htrans_m;                                  //Indicates the transfer type, i.e. IDLE, BUSY, NONSEQUENTIAL, SEQUENTIAL for Master 0
-logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] hwdata_m;                       //Write data bus of Master 0
-logic [MASTER_COUNT-1:0][2:0] o_hburst_m;                                //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
+logic [MANAGER_COUNT-1:0][ADDR_WIDTH-1:0] hadder_m;                       //Master 0
+logic [MANAGER_COUNT-1:0]hwrite_m;                                        //Indicates the transfer direction issued by Master 0
+logic [MANAGER_COUNT-1:0][2:0] hsize_m;                                   //Indicates the size of the transfer issued by Master 0
+logic [MANAGER_COUNT-1:0][1:0] htrans_m;                                  //Indicates the transfer type, i.e. IDLE, BUSY, NONSEQUENTIAL, SEQUENTIAL for Master 0
+logic [MANAGER_COUNT-1:0][DATA_WIDTH-1:0] hwdata_m;                       //Write data bus of Master 0
+logic [MANAGER_COUNT-1:0][2:0] o_hburst_m;                                //Burst type indicates if the transfer is a single transfer of forms a part of a burst. Here, fixed bursts of 4, 8 and 16 are supported for both incrementing/wrapping types.
 
-logic [MASTER_COUNT-1:0] hresp_m;                                           //Transfer response, selected by the decoder
-logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] hrdata_m;                         //Read data bus, selected by the decoder
+logic [MANAGER_COUNT-1:0] hresp_m;                                           //Transfer response, selected by the decoder
+logic [MANAGER_COUNT-1:0][DATA_WIDTH-1:0] hrdata_m;                         //Read data bus, selected by the decoder
 
 
 // SLAVE 0
@@ -61,16 +61,16 @@ logic [DATA_WIDTH-1:0] hwdata_s0;                       //Write data bus of Mast
 // logic [DATA_WIDTH-1:0] hrdata_2;                       //Read data bus of Slave 2
 
 
-logic [SLAVE_COUNT-1:0] hsel = 1'b1;                          //Slave select bus 
+logic [SUBORDINATE_COUNT-1:0] hsel = 1'b1;                          //Slave select bus 
 
 //HDL code
 //ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) ahb_if (i_hclk, i_hreset);
-ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mast_mmgr [MASTER_COUNT-1:0] (i_hclk, i_hreset);
+ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mast_mmgr [MANAGER_COUNT-1:0] (i_hclk, i_hreset);
 ahb #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mmgr_sub (i_hclk, i_hreset);
 
 
 // *** Port assignments for Managers <-> AHBmmgr cables
-for (genvar i = 0; i < MASTER_COUNT; i++) begin
+for (genvar i = 0; i < MANAGER_COUNT; i++) begin
 
   // into manager
   assign o_hready_m[i] = mast_mmgr[i].HREADY;
@@ -111,7 +111,7 @@ dummy_ahbmmgr #(.MANAGERS(1)) my_mmgr ( .HCLK(i_hclk), .HRESETn(i_hreset), .mana
 
 
 //AHB master instantiation
-for (genvar i = 0; i < MASTER_COUNT; i++) begin
+for (genvar i = 0; i < MANAGER_COUNT; i++) begin
   AHB_manager #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mo(.i_hclk(i_hclk),
                                                                     .i_hreset(i_hreset),
                                                                     .i_start(i_start_0),
@@ -153,7 +153,7 @@ AHB_subordinate #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPT
 
 
 //AHB interconnect fabric instantiation
-// AHB_IF #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .SLAVE_COUNT(SLAVE_COUNT)) f0(.i_hclk(i_hclk),
+// AHB_IF #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .SUBORDINATE_COUNT(SUBORDINATE_COUNT)) f0(.i_hclk(i_hclk),
 //                                                                                          .i_hreset(i_hreset),
 //                                                                                          .i_haddr(hadder_0),
 

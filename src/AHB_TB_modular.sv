@@ -8,8 +8,8 @@ parameter CLK_PERIOD=20;                                         //Clock period
 parameter ADDR_WIDTH=32;                                         //Address bus width
 parameter DATA_WIDTH=32;                                         //Data bus width
 parameter MEMORY_DEPTH=80;                                     //Subordinate memory 
-parameter SLAVE_COUNT=1;                                         //Number of connected AHB slaves
-parameter MASTER_COUNT=1;                                         //Number of connected AHB slaves
+parameter SUBORDINATE_COUNT=1;                                         //Number of connected AHB slaves
+parameter MANAGER_COUNT=1;                                         //Number of connected AHB slaves
 
 parameter WAIT_WRITE=1;                                          //Number of wait cycles issued by the subordinate in response to a 'write' transfer
 parameter WAIT_READ=2;                                           //Number of wait cycles issued by the subordinate in response to a 'read' transfer
@@ -27,7 +27,7 @@ localparam WRAP16=3'b110;                                        //16-beat wrapp
 localparam INCR16=3'b111;                                        //16-beat incrementing burst
 
 localparam REGISTER_SELECT_BITS=12;                              //Memory mapping - each subordinate's internal memory has maximum 2^REGISTER_SELECT_BITS-1 bytes (depends on MEMORY_DEPTH)
-localparam SLAVE_SELECT_BITS=20;                                 //Memory mapping - width of subordinate address
+localparam SUBORDINATE_SELECT_BITS=20;                                 //Memory mapping - width of subordinate address
 
 
 // Testing signals
@@ -37,20 +37,20 @@ logic test_failed;
 logic clk;                                                       //System's clock
 logic rstn;                                                      //Active high logic  
 integer SEED=15;                                                  //Used for randomization
-logic start_0;                                                   //Read/Write transer is initiated if the 'start' signal is logic high upon positive edge of clk
+logic start_0;                                                    //Read/Write transer is initiated if the 'start' signal is logic high upon positive edge of clk
 
 // input/outputs arrays of 'initiate_transfer task', corresponding to each manager
-logic [MASTER_COUNT-1:0]                  hready_m;                                                    //hready from each manager signal indicates if the manager-mmgr bus is busy
-logic [MASTER_COUNT-1:0]                  rw_m;                                                      //Dictates transfer direction. '1' for Manager-->Subordinate (write) and '0' for Subordinate-->Manager (read)
-logic [MASTER_COUNT-1:0][2:0]             hburst_m;                                            //Burst type
-logic [MASTER_COUNT-1:0][2:0]             hsize_m;                                             //transfer size for Master_0
-logic [MASTER_COUNT-1:0][ADDR_WIDTH-1:0]  haddr_m;                                //
-logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0]  hwdata_m;                              //Randomized data to be written by a Master_0 to a Subordinate
+logic [MANAGER_COUNT-1:0]                  hready_m;                                                    //hready from each manager signal indicates if the manager-mmgr bus is busy
+logic [MANAGER_COUNT-1:0]                  rw_m;                                                      //Dictates transfer direction. '1' for Manager-->Subordinate (write) and '0' for Subordinate-->Manager (read)
+logic [MANAGER_COUNT-1:0][2:0]             hburst_m;                                            //Burst type
+logic [MANAGER_COUNT-1:0][2:0]             hsize_m;                                             //transfer size for Manager_0
+logic [MANAGER_COUNT-1:0][ADDR_WIDTH-1:0]  haddr_m;                                //
+logic [MANAGER_COUNT-1:0][DATA_WIDTH-1:0]  hwdata_m;                              //Randomized data to be written by a Manager_0 to a Subordinate
 
 // Output of DUT
-logic [MASTER_COUNT-1:0][DATA_WIDTH-1:0] data_out_m;                              //Received data from one of the slaves as sampled by manager #0 following a valid read command
+logic [MANAGER_COUNT-1:0][DATA_WIDTH-1:0] data_out_m;                              //Received data from one of the slaves as sampled by manager #0 following a valid read command
 
-logic [SLAVE_COUNT-1:0][MEMORY_DEPTH-1:0][7:0]mem;               //mimic memory for subordinate 0
+logic [SUBORDINATE_COUNT-1:0][MEMORY_DEPTH-1:0][7:0]mem;               //mimic memory for subordinate 0
 
 
 
@@ -59,15 +59,15 @@ logic [SLAVE_COUNT-1:0][MEMORY_DEPTH-1:0][7:0]mem;               //mimic memory 
 //Write to mimic memory task: upon invoking this task the relevant data and adress buses are sampled and written into the mimic memory after three 'hready' negative edges.
 //This is since the data, address, subordinate number etc. which are generated within the TB are written into the subordinate internal memory with latency due to the pipeline nature of the architecture.
 //This task is declared 'automatic' to allow parallel executions in case of consecutive 'write' commands 
-task automatic write_to_mimic_task(input logic manager_index, input logic [2:0] hsize, input logic [SLAVE_COUNT-1:0] slave_idx, input logic [ADDR_WIDTH-1:0] addr_rand, input logic [DATA_WIDTH-1:0] data_rand);
+task automatic write_to_mimic_task(input logic manager_index, input logic [2:0] hsize, input logic [SUBORDINATE_COUNT-1:0] sub_idx, input logic [ADDR_WIDTH-1:0] addr_rand, input logic [DATA_WIDTH-1:0] data_rand);
 
   logic [2:0] hsize_s;                                           //Holds the value of hsize upon invocation
-  logic [SLAVE_COUNT-1:0] slave_idx_s;                           //Holds the value of slave_idx upon invocation
+  logic [SUBORDINATE_COUNT-1:0] sub_idx_s;                           //Holds the value of sub_idx upon invocation
   logic [ADDR_WIDTH-1:0] addr_rand_s;                            //Holds the value of haddr_m upon invocation
   logic [DATA_WIDTH-1:0] data_rand_s;                            //Holds the value of data_rand upon invocation
 
   hsize_s=hsize;
-  slave_idx_s=slave_idx;
+  sub_idx_s=sub_idx;
   addr_rand_s=addr_rand;
   data_rand_s=data_rand;
 
@@ -80,36 +80,36 @@ task automatic write_to_mimic_task(input logic manager_index, input logic [2:0] 
   
   
   case (hsize_s)                                                 //Write the value to the relevant mimic memory
-    BYTE : mem[slave_idx_s][addr_rand_s]=data_rand_s[31:24];
+    BYTE : mem[sub_idx_s][addr_rand_s]=data_rand_s[31:24];
 
     HALFWORD : begin
-    mem[slave_idx_s][addr_rand_s]=data_rand_s[31:24];
-    mem[slave_idx_s][addr_rand_s+1]=data_rand_s[23:16];
+    mem[sub_idx_s][addr_rand_s]=data_rand_s[31:24];
+    mem[sub_idx_s][addr_rand_s+1]=data_rand_s[23:16];
     end
 
     WORD : begin 
-    mem[slave_idx_s][addr_rand_s]=data_rand_s[31:24];
-    mem[slave_idx_s][addr_rand_s+1]=data_rand_s[23:16];
-    mem[slave_idx_s][addr_rand_s+2]=data_rand_s[15:8];
-    mem[slave_idx_s][addr_rand_s+3]=data_rand_s[7:0];
+    mem[sub_idx_s][addr_rand_s]=data_rand_s[31:24];
+    mem[sub_idx_s][addr_rand_s+1]=data_rand_s[23:16];
+    mem[sub_idx_s][addr_rand_s+2]=data_rand_s[15:8];
+    mem[sub_idx_s][addr_rand_s+3]=data_rand_s[7:0];
     end
   endcase	
 endtask
 
 //compare_task: upon invoking this task, the relevant data, subordinate index and address buses are sampled and after the latency period of 3 hready edges compared with the data obtained by the manager at the end of a 'read' transfer
-task automatic compare_task(input logic [2:0] hsize, input logic [MASTER_COUNT-1:0] master_idx, input logic [SLAVE_COUNT-1:0] slave_idx, input logic [ADDR_WIDTH-1:0] addr_rand, input logic [4:0] wait_period);
+task automatic compare_task(input logic [2:0] hsize, input logic [MANAGER_COUNT-1:0] manager_idx, input logic [SUBORDINATE_COUNT-1:0] sub_idx, input logic [ADDR_WIDTH-1:0] addr_rand, input logic [4:0] wait_period);
   logic [2:0] hsize_s;                                           //Holds the value of hsize upon invocation
-  logic [SLAVE_COUNT-1:0] slave_idx_s;                           //Holds the value of slave_idx upon invocation
+  logic [SUBORDINATE_COUNT-1:0] sub_idx_s;                           //Holds the value of sub_idx upon invocation
   logic [ADDR_WIDTH-1:0] addr_rand_s;                            //Holds the value of haddr_m upon invocation
  
   #1;
   hsize_s=hsize;
-  slave_idx_s=slave_idx;
+  sub_idx_s=sub_idx;
   addr_rand_s=addr_rand;
 
   repeat (wait_period) begin
     #1
-    wait (hready_m[master_idx]==1'b1) 
+    wait (hready_m[manager_idx]==1'b1) 
     #1
     @(posedge clk);                                              //wait for 3 hclk positive edges where the hready is logic high due to pipeline related latency
   end
@@ -117,32 +117,32 @@ task automatic compare_task(input logic [2:0] hsize, input logic [MASTER_COUNT-1
  
   case (hsize_s)                                                 //Compare the value with the relevant mimic memory
     BYTE: 
-    if (mem[slave_idx_s][addr_rand_s]==data_out_m[master_idx][31:24])
-      $display("Data stored in mimic memory number %d in address %d is: %h, Data read from subordinate %d is: %2h - GREAT SUCCESS",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s],slave_idx_s, data_out_m[master_idx][31:24]);
+    if (mem[sub_idx_s][addr_rand_s]==data_out_m[manager_idx][31:24])
+      $display("Data stored in mimic memory number %d in address %d is: %h, Data read from subordinate %d is: %2h - GREAT SUCCESS",sub_idx_s, addr_rand_s, mem[sub_idx_s][addr_rand_s],sub_idx_s, data_out_m[manager_idx][31:24]);
     else begin
       test_failed = 1'b1;
-      $display ("Data stored in mimic memory number %d in address %d is: %h, Data read from subordinate %d is: %2h - FAILURE",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s],slave_idx_s, data_out_m[master_idx][31:24]);
+      $display ("Data stored in mimic memory number %d in address %d is: %h, Data read from subordinate %d is: %2h - FAILURE",sub_idx_s, addr_rand_s, mem[sub_idx_s][addr_rand_s],sub_idx_s, data_out_m[manager_idx][31:24]);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime); 
       //$finish;
   end 
 	
     HALFWORD :
-    if ({mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1]}==data_out_m[master_idx][31:16]) //TODO: input manager id
-      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from subordinate %d is: %4h - GREAT SUCCESS",slave_idx_s, addr_rand_s, {mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1]},slave_idx_s, data_out_m[master_idx][31:16]);
+    if ({mem[sub_idx_s][addr_rand_s],mem[sub_idx_s][addr_rand_s+1]}==data_out_m[manager_idx][31:16]) //TODO: input manager id
+      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from subordinate %d is: %4h - GREAT SUCCESS",sub_idx_s, addr_rand_s, {mem[sub_idx_s][addr_rand_s],mem[sub_idx_s][addr_rand_s+1]},sub_idx_s, data_out_m[manager_idx][31:16]);
     else begin
         test_failed = 1'b1;
-      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from subordinate %d is: %4h - FAILURE",slave_idx_s, addr_rand_s, mem[slave_idx_s][addr_rand_s+:1],slave_idx_s, data_out_m[master_idx][31:16]);
+      $display("Data stored in mimic memory number %d in address %d is: %4h, Data read from subordinate %d is: %4h - FAILURE",sub_idx_s, addr_rand_s, mem[sub_idx_s][addr_rand_s+:1],sub_idx_s, data_out_m[manager_idx][31:16]);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime);
       //$finish;
     end 
 
     WORD :
-    if ({mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]}==data_out_m[master_idx][31:0])
-      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - GREAT SUCCESS", slave_idx_s, addr_rand_s,{mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]},slave_idx_s,data_out_m);
+    if ({mem[sub_idx_s][addr_rand_s],mem[sub_idx_s][addr_rand_s+1],mem[sub_idx_s][addr_rand_s+2],mem[sub_idx_s][addr_rand_s+3]}==data_out_m[manager_idx][31:0])
+      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - GREAT SUCCESS", sub_idx_s, addr_rand_s,{mem[sub_idx_s][addr_rand_s],mem[sub_idx_s][addr_rand_s+1],mem[sub_idx_s][addr_rand_s+2],mem[sub_idx_s][addr_rand_s+3]},sub_idx_s,data_out_m);
     else begin
-      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - FAILURE",slave_idx_s, addr_rand_s, {mem[slave_idx_s][addr_rand_s],mem[slave_idx_s][addr_rand_s+1],mem[slave_idx_s][addr_rand_s+2],mem[slave_idx_s][addr_rand_s+3]}, slave_idx_s,data_out_m);
+      $display("Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - FAILURE",sub_idx_s, addr_rand_s, {mem[sub_idx_s][addr_rand_s],mem[sub_idx_s][addr_rand_s+1],mem[sub_idx_s][addr_rand_s+2],mem[sub_idx_s][addr_rand_s+3]}, sub_idx_s,data_out_m);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime);
     //   $finish;
@@ -151,7 +151,7 @@ task automatic compare_task(input logic [2:0] hsize, input logic [MASTER_COUNT-1
 endtask
 
 //Initiate transfer task : issues T consecutive transfers with randomized parameters (addr,size,width,etc.)
-task automatic initiate_transfer ( input logic [MASTER_COUNT-1:0] manager_index, input int T);    
+task automatic initiate_transfer ( input logic [MANAGER_COUNT-1:0] manager_index, input int T);    
 
     // local task variables
     logic [2:0] burst_type;                                          //Supported burst types: Single, WRAP4, INCR4, WRAP8, INCR8, WRAP16 and INCR16
@@ -160,13 +160,13 @@ task automatic initiate_transfer ( input logic [MASTER_COUNT-1:0] manager_index,
     logic [2:0] addr_delta;                                          //Indicates the width of the transfer: byte=1, half word=2, word=4. 
     logic [ADDR_WIDTH-1:0]  addr_uniformdistr;                               //Randomized register address prior to byte/half word/ word alighment
     logic [ADDR_WIDTH-1:0]  slave_prefix;                              //Randomizes subordinate address
-    logic [ADDR_WIDTH-1:0]  addr_size_aligned;                              //Address for the transfer issued by Master_0
+    logic [ADDR_WIDTH-1:0]  addr_size_aligned;                              //Address for the transfer issued by Manager_0
     logic [ADDR_WIDTH-1:0]  addr_mimc;                              //addr_mimc mimics the internal logic within the manager which calculates the address
     logic rw_rand;                                                      //Dictates transfer direction. '1' for Manager-->Subordinate (write) and '0' for Subordinate-->Manager (read)
     logic [2:0] hburst_rand;                                            //Burst type
     logic [2:0] hsize_rand;
-    logic [ADDR_WIDTH-1:0] haddr_rand;                                             //transfer size for Master_0
-    logic [DATA_WIDTH-1:0]  hwdata_rand;                              //Randomized data to be written by a Master_0 to a Subordinate
+    logic [ADDR_WIDTH-1:0] haddr_rand;                                             //transfer size for Manager_0
+    logic [DATA_WIDTH-1:0]  hwdata_rand;                              //Randomized data to be written by a Manager_0 to a Subordinate
 
 
 
@@ -247,8 +247,8 @@ task automatic initiate_transfer ( input logic [MASTER_COUNT-1:0] manager_index,
                         end
                     endcase
                 
-                    slave_prefix = (SLAVE_COUNT <= 1) ? 0 : $dist_uniform(SEED,0,SLAVE_COUNT-1);                   //Selecting a subordinate to initiate a trasfer with   
-                    haddr_rand = {slave_prefix[SLAVE_SELECT_BITS-1:0],addr_size_aligned[REGISTER_SELECT_BITS-1:0]};
+                    slave_prefix = (SUBORDINATE_COUNT <= 1) ? 0 : $dist_uniform(SEED,0,SUBORDINATE_COUNT-1);                   //Selecting a subordinate to initiate a trasfer with   
+                    haddr_rand = {slave_prefix[SUBORDINATE_SELECT_BITS-1:0],addr_size_aligned[REGISTER_SELECT_BITS-1:0]};
                     addr_mimc = addr_size_aligned;
             end 
             else 
@@ -319,7 +319,7 @@ task automatic initiate_transfer ( input logic [MASTER_COUNT-1:0] manager_index,
             end
             else begin
                 fork
-                compare_task(.hsize(hsize_rand), .master_idx(manager_index), .slave_idx(slave_prefix), .addr_rand(addr_mimc), .wait_period(3));                               //Execute the 'compare_task' which runs in the background	
+                compare_task(.hsize(hsize_rand), .manager_idx(manager_index), .sub_idx(slave_prefix), .addr_rand(addr_mimc), .wait_period(3));                               //Execute the 'compare_task' which runs in the background	
                 //wait (start_0==1'b0);                                              //Terminate comparison operations when TB-generated 'start' signal falls to logic low - stop comparison tasks for the last iteration of the simulation, can also be solved with changing the loop dimensions for comparison
                 join_none;
             end 
@@ -341,7 +341,7 @@ task automatic initiate_transfer ( input logic [MASTER_COUNT-1:0] manager_index,
 endtask : initiate_transfer
 
 //DUT instantiation
-AHB_DUT #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY_DEPTH), .SLAVE_COUNT(SLAVE_COUNT), .MASTER_COUNT(MASTER_COUNT), .WAIT_WRITE(WAIT_WRITE), .WAIT_READ(WAIT_READ)) d0(.i_hclk(clk),
+AHB_DUT #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY_DEPTH), .SUBORDINATE_COUNT(SUBORDINATE_COUNT), .MANAGER_COUNT(MANAGER_COUNT), .WAIT_WRITE(WAIT_WRITE), .WAIT_READ(WAIT_READ)) d0(.i_hclk(clk),
                                                                                                                                                                        .i_hreset(rstn),
                                                                                                                                                                        .i_start_0(start_0),
                                                                                                                                                                        .i_hburst_tb(hburst_m),
