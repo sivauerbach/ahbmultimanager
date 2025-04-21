@@ -72,7 +72,8 @@ add wave -noupdate -group Random_TB /AHB_TB/*
 # add wave -noupdate -group Master_0_outputs -radix HWRITE_states /AHB_TB/d0/mo/o_hwrite
 # add wave -noupdate -group Master_0_outputs /AHB_TB/d0/mo/i_start
 
-add wave -noupdate -group Manager_Cable /AHB_TB/d0/mast_mmgr
+add wave -noupdate -group Manager0_Cable /AHB_TB/d0/mast_mmgr[0]/*
+add wave -noupdate -group Manager1_Cable /AHB_TB/d0/mast_mmgr[1]/*
 
 add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/*
 add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/state
@@ -84,15 +85,19 @@ add wave -noupdate /AHB_TB/mem
 
 ### Modifying Radices: 
 
-radix signal sim:/AHB_TB/d0/mast_mmgr/HTRANS TRANS_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[0]/HTRANS TRANS_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[1]/HTRANS TRANS_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HTRANS TRANS_states
 
-radix signal sim:/AHB_TB/d0/mast_mmgr/HBURST HBURST_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[0]/HBURST HBURST_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[1]/HBURST HBURST_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HBURST HBURST_states
 
-radix signal sim:/AHB_TB/d0/mast_mmgr/HWRITE HWRITE_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[0]/HWRITE HWRITE_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[1]/HWRITE HWRITE_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HWRITE HWRITE_states
-radix signal sim:/AHB_TB/d0/mast_mmgr/HSIZE HSIZE_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[0]/HSIZE HSIZE_states
+radix signal sim:/AHB_TB/d0/mast_mmgr[1]/HSIZE HSIZE_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HSIZE HSIZE_states
 
 

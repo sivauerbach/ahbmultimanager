@@ -72,7 +72,7 @@ module dummy_ahbmmgr #(parameter MANAGERS = 4) (
       else begin
         managers[i].HREADY = (i==prevgrantID) ? mainbus.HREADY : ~(requestV[i]); // Default: Low for stored requests, High for not stored requests.
         managers[i].HRESP = (i==prevgrantID) ? mainbus.HRESP : HRESP_OKAY; // Default: HRESP=OKAY
-        managers[i].HRDATA = (i==prevgrantID) ? mainbus.HRDATA : 'x;
+        managers[i].HRDATA = (i==prevgrantID) ? mainbus.HRDATA : managers[i].HRDATA;
         end    
       end
     end
@@ -151,7 +151,7 @@ for (genvar i = 0; i < MANAGERS; i++) begin
  
   // always_ff @ (posedge HCLK) begin
   always @ (posedge HCLK) begin
-    if ((state[i]== s_GRANTED ) && (next_state[i]!=s_GRANTED)) arb_enable <= ~arb_enable;
+    if ((state[i]== s_GRANTED ) && (next_state[i] !=s_GRANTED)) arb_enable <= ~arb_enable;
     state[i] <= next_state[i];
   end
   

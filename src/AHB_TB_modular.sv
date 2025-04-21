@@ -140,9 +140,9 @@ task automatic compare_task(input logic [2:0] hsize, input logic [MANAGER_COUNT-
 
     WORD :
     if ({mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1],mem[subID_s][addr_rand_s+2],mem[subID_s][addr_rand_s+3]}==data_out_m[managerID][31:0])
-      $display("Manager %d: Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - GREAT SUCCESS",managerID, subID_s, addr_rand_s,{mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1],mem[subID_s][addr_rand_s+2],mem[subID_s][addr_rand_s+3]},subID_s,data_out_m);
+      $display("Manager %d: Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - GREAT SUCCESS",managerID, subID_s, addr_rand_s,{mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1],mem[subID_s][addr_rand_s+2],mem[subID_s][addr_rand_s+3]},subID_s,data_out_m[managerID]);
     else begin
-      $display("Manager %d: Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - FAILURE", managerID ,subID_s, addr_rand_s, {mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1],mem[subID_s][addr_rand_s+2],mem[subID_s][addr_rand_s+3]}, subID_s,data_out_m);
+      $display("Manager %d: Data stored in mimic memory number %d in address %d is: %8h, Data read from subordinate %d is: %8h - FAILURE", managerID ,subID_s, addr_rand_s, {mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1],mem[subID_s][addr_rand_s+2],mem[subID_s][addr_rand_s+3]}, subID_s,data_out_m[managerID]);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime);
     //   $finish;
