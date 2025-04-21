@@ -116,6 +116,6 @@ update
 # WaveRestoreZoom {481262800 ps} {532565200 ps}
 
 -- Run the Simulation
-#run 10000 ns
-run 50 ms
+run 4300 ns
+#run 50 ms
 wave zoom full

@@ -107,7 +107,7 @@ assign htrans_s0 = mmgr_sub.HTRANS;
 // assign mmgr_sub.HMASTLOCK = ;
 
 
-dummy_ahbmmgr #(.MANAGERS(1)) my_mmgr ( .HCLK(i_hclk), .HRESETn(i_hreset), .managers(mast_mmgr), .mainbus(mmgr_sub));
+dummy_ahbmmgr #(.MANAGERS(MANAGER_COUNT)) my_mmgr ( .HCLK(i_hclk), .HRESETn(i_hreset), .managers(mast_mmgr), .mainbus(mmgr_sub));
 
 
 //AHB master instantiation
@@ -115,14 +115,14 @@ for (genvar i = 0; i < MANAGER_COUNT; i++) begin
   AHB_manager #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mo(.i_hclk(i_hclk),
                                                                     .i_hreset(i_hreset),
                                                                     .i_start(i_start_0),
-                                                                    .i_haddr(i_haddr_tb),
-                                                                    .i_hwrite(i_hwrite_tb),
-                                                                    .i_hsize(i_hsize_tb),
-                                                                    .i_hwdata(i_hwdata_tb),
+                                                                    .i_haddr(i_haddr_tb[i]),
+                                                                    .i_hwrite(i_hwrite_tb[i]),
+                                                                    .i_hsize(i_hsize_tb[i]),
+                                                                    .i_hwdata(i_hwdata_tb[i]),
                                                                     .i_hready(o_hready_m[i]),
                                                                     .i_hresp(hresp_m[i]),
                                                                     .i_hrdata(hrdata_m[i]),
-                                                                    .i_hburst(i_hburst_tb),
+                                                                    .i_hburst(i_hburst_tb[i]),
 
                                                                     .o_haddr(hadder_m[i]),
                                                                     .o_hwrite(hwrite_m[i]),
