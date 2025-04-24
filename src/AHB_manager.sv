@@ -72,6 +72,14 @@ always @(*) begin
 end
 
 always @(posedge i_hclk or negedge i_hreset)
+  if (read_flag)                                                        //Read transfer - 'rdata' has not been sampled yet and it is ready to be sampled since i_hready is logic high
+    case (read_size)
+      BYTE : o_hrdata[31:24]<= i_hrdata[31:24];
+      HALFWORD : o_hrdata[31:16]<= i_hrdata[31:16];
+      WORD : o_hrdata<= i_hrdata;	
+    endcase
+
+always @(posedge i_hclk or negedge i_hreset)
   if (!i_hreset) begin
     o_haddr<='0;
     o_hwrite<=1'b1;
@@ -185,12 +193,12 @@ always @(posedge i_hclk or negedge i_hreset)
 
       start_samp<=i_start; 
    
-      if (read_flag)                                                        //Read transfer - 'rdata' has not been sampled yet and it is ready to be sampled since i_hready is logic high
-        case (read_size)
-          BYTE : o_hrdata[31:24]<= i_hrdata[31:24];
-          HALFWORD : o_hrdata[31:16]<= i_hrdata[31:16];
-          WORD : o_hrdata<= i_hrdata;	
-        endcase
+      // if (read_flag)                                                        //Read transfer - 'rdata' has not been sampled yet and it is ready to be sampled since i_hready is logic high
+      //   case (read_size)
+      //     BYTE : o_hrdata[31:24]<= i_hrdata[31:24];
+      //     HALFWORD : o_hrdata[31:16]<= i_hrdata[31:16];
+      //     WORD : o_hrdata<= i_hrdata;	
+      //   endcase
   end
 
   SEQ: if (i_hready) begin
@@ -277,12 +285,12 @@ always @(posedge i_hclk or negedge i_hreset)
       endcase
     end
 
-    if (read_flag)                                                          //Read transfer - 'rdata' has not been sampled yet and it is ready to be sampled since i_hready is logic high
-      case (read_size)
-      BYTE : o_hrdata[31:24]<= i_hrdata[31:24];
-      HALFWORD : o_hrdata[31:16]<= i_hrdata[31:16];
-      WORD : o_hrdata<= i_hrdata;	
-      endcase 
+    // if (read_flag)                                                          //Read transfer - 'rdata' has not been sampled yet and it is ready to be sampled since i_hready is logic high
+    //   case (read_size)
+    //   BYTE : o_hrdata[31:24]<= i_hrdata[31:24];
+    //   HALFWORD : o_hrdata[31:16]<= i_hrdata[31:16];
+    //   WORD : o_hrdata<= i_hrdata;	
+    //   endcase 
 
     start_samp<=i_start; 
   end

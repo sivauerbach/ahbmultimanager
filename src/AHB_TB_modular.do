@@ -75,6 +75,10 @@ add wave -noupdate -group Random_TB /AHB_TB/*
 add wave -noupdate -group Manager0_Cable /AHB_TB/d0/mast_mmgr[0]/*
 add wave -noupdate -group Manager1_Cable /AHB_TB/d0/mast_mmgr[1]/*
 
+add wave -noupdate -group Manager0_DUT sim:/AHB_TB/d0/managers[0]/mo/*
+add wave -noupdate -group Manager1_DUT sim:/AHB_TB/d0/managers[1]/mo/*
+
+
 add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/*
 add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/state
 add wave -noupdate -group AHB_MMgr /AHB_TB/d0/my_mmgr/next_state
@@ -96,10 +100,14 @@ radix signal sim:/AHB_TB/d0/mmgr_sub/HBURST HBURST_states
 radix signal sim:/AHB_TB/d0/mast_mmgr[0]/HWRITE HWRITE_states
 radix signal sim:/AHB_TB/d0/mast_mmgr[1]/HWRITE HWRITE_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HWRITE HWRITE_states
+
 radix signal sim:/AHB_TB/d0/mast_mmgr[0]/HSIZE HSIZE_states
 radix signal sim:/AHB_TB/d0/mast_mmgr[1]/HSIZE HSIZE_states
 radix signal sim:/AHB_TB/d0/mmgr_sub/HSIZE HSIZE_states
 
+radix signal sim:/AHB_TB/d0/mast_mmgr[0]/HADDR decimal
+radix signal sim:/AHB_TB/d0/mast_mmgr[1]/HADDR decimal
+radix signal sim:/AHB_TB/d0/mmgr_sub/HADDR decimal
 
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {302565100 ps} 0} {{Cursor 2} {161830000 ps} 0}

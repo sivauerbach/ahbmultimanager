@@ -111,7 +111,7 @@ dummy_ahbmmgr #(.MANAGERS(MANAGER_COUNT)) my_mmgr ( .HCLK(i_hclk), .HRESETn(i_hr
 
 
 //AHB master instantiation
-for (genvar i = 0; i < MANAGER_COUNT; i++) begin
+for (genvar i = 0; i < MANAGER_COUNT; i++) begin : managers
   AHB_manager #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) mo(.i_hclk(i_hclk),
                                                                     .i_hreset(i_hreset),
                                                                     .i_start(i_start_0),

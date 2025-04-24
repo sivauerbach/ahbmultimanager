@@ -132,11 +132,12 @@ task automatic compare_task(input logic [2:0] hsize, input logic [MANAGER_COUNT-
       $display("Manager %d: Data stored in mimic memory number %d in address %d is: %4h, Data read from subordinate %d is: %4h - GREAT SUCCESS", managerID ,subID_s, addr_rand_s, {mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1]},subID_s, data_out_m[managerID][31:16]);
     else begin
         test_failed = 1'b1;
-      $display("Manager %d: Data stored in mimic memory number %d in address %d is: %4h, Data read from subordinate %d is: %4h - FAILURE", managerID ,subID_s, addr_rand_s, mem[subID_s][addr_rand_s+:1],subID_s, data_out_m[managerID][31:16]);
+      $display("Manager %d: Data stored in mimic memory number %d in address %d is: %4h, Data read from subordinate %d is: %4h - FAILURE", managerID ,subID_s, addr_rand_s,   {mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1]} ,subID_s, data_out_m[managerID][31:16]);
       $timeformat(-9,2,"ns");
       $display("Time is %t", $realtime);
       //$finish;
     end 
+
 
     WORD :
     if ({mem[subID_s][addr_rand_s],mem[subID_s][addr_rand_s+1],mem[subID_s][addr_rand_s+2],mem[subID_s][addr_rand_s+3]}==data_out_m[managerID][31:0])
@@ -364,6 +365,7 @@ AHB_DUT #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH), .MEMORY_DEPTH(MEMORY
         #CLK_PERIOD
         rstn=1'b1;
         #200
+        // TODO: change hardcoded M=2 to for loop
         fork 
         initiate_transfer ( .manager_index(0), .T(5000) );
         initiate_transfer ( .manager_index(1), .T(5000) );
